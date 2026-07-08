@@ -1,0 +1,8 @@
+# ignore checksums and temporary files
+.**_SUCCESS.crc
+.*.parquet.crc
+.*.crc
+
+_SUCCESS
+.parquet.*.tmp
+_temporary/
