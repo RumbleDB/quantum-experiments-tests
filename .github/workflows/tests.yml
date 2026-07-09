@@ -58,6 +58,7 @@ jobs:
       - name: Run ensemble dataset tests
         env:
           QES_DATA_ROOT: ${{ github.workspace }}/datasets
+          QES_E2E_ARTIFACT_ROOT: ${{ github.workspace }}/datasets
         working-directory: ${{ github.workspace }}/quantum-experiment-structures
         run: |
           pytest e2e_tests/test_ccs_datasets.py -v
