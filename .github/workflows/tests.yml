@@ -2,17 +2,19 @@ name: Validate datasets
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   validate-datasets:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
-
+    timeout-minutes: 1440
     steps:
       - name: Checkout dataset repository
         uses: actions/checkout@v4
@@ -36,29 +38,31 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Debug workspace
-        run: |
-          pwd
-          ls -lah
-          find . -maxdepth 2 -type d
-
       - name: Install Quantum Experiment Structures
         working-directory: ${{ github.workspace }}/quantum-experiment-structures
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Verify Spark installation
-        run: |
-          python -c "from pyspark.sql import SparkSession; \
-          spark=SparkSession.builder.master('local[*]').appName('test').getOrCreate(); \
-          print(spark.range(10).count()); \
-          spark.stop()"
-
       - name: Run ensemble dataset tests
         env:
           QES_DATA_ROOT: ${{ github.workspace }}/datasets
-          QES_E2E_ARTIFACT_ROOT: ${{ github.workspace }}/datasets
+          QES_E2E_ARTIFACT_ROOT: ${{ github.workspace }}/datasets/results
         working-directory: ${{ github.workspace }}/quantum-experiment-structures
         run: |
+          pytest e2e_tests/test_ccs_datasets.py -v
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ github.workspace }}/datasets/results
+
+  deploy-pages:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: validate-datasets
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
           pytest e2e_tests/test_ccs_datasets.py -v
