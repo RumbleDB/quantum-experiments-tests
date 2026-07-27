@@ -65,4 +65,4 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-          pytest e2e_tests/test_ccs_datasets.py -v
+          pytest e2e_tests/ -v
